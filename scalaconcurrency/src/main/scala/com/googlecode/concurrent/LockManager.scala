@@ -11,44 +11,44 @@ import java.util.concurrent.TimeUnit
  * 7 Nov 2011
  */
 object LockManager {
-	def reentrantLock = new ReentrantLock with LockEx
+	def reentrantLock = new LockEx(new ReentrantLock)
 }
 
-trait LockEx { this: Lock =>
+class LockEx(lock: Lock) {
 
 	def lockAndDo[T](f: => T): T = {
-		lock
+		lock.lock
 		try {
 			f
 		} finally {
-			unlock
+			lock.unlock
 		}
 	}
 
 	def lockInterruptiblyAndDo[T](f: => T): T = {
-		lockInterruptibly
+		lock.lockInterruptibly
 		try {
 			f
 		} finally {
-			unlock
+			lock.unlock
 		}
 	}
 
 	def tryLockAndDo[T](f: => T): Option[T] =
-		if (tryLock)
+		if (lock.tryLock)
 			try {
 				Some(f)
 			} finally {
-				unlock
+				lock.unlock
 			}
 		else None
 
 	def tryLockAndDo[T](time: Long, unit: TimeUnit)(f: => T): Option[T] =
-		if (tryLock(time, unit))
+		if (lock.tryLock(time, unit))
 			try {
 				Some(f)
 			} finally {
-				unlock
+				lock.unlock
 			}
 		else None
 

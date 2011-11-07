@@ -23,12 +23,13 @@ class LockManagerSpec extends SpecificationWithJUnit {
 	}
 
 	"lockAndDo aquires and releases lock" in {
-		val lock = new MockLock with LockEx
+		val mockLock = new MockLock
+		val lock = new LockEx(mockLock)
 		lock.lockAndDo {
 			// nop
 		}
-		lock.lockCount must_== 1
-		lock.unlockCount must_== 1
+		mockLock.lockCount must_== 1
+		mockLock.unlockCount must_== 1
 	}
 
 	"lockInterruptiblyAndDo executes function and returns value" in {
@@ -42,11 +43,12 @@ class LockManagerSpec extends SpecificationWithJUnit {
 	}
 
 	"lockInterruptiblyAndDo aquires and releases the lock" in {
-		val lock = new MockLock with LockEx
+		val mockLock = new MockLock
+		val lock = new LockEx(mockLock)
 		lock.lockInterruptiblyAndDo {
 		}
-		lock.lockInterruptiblyCount must_== 1
-		lock.unlockCount must_== 1
+		mockLock.lockInterruptiblyCount must_== 1
+		mockLock.unlockCount must_== 1
 	}
 
 	"tryLockAndDo executes function and returns value" in {
@@ -60,11 +62,12 @@ class LockManagerSpec extends SpecificationWithJUnit {
 	}
 
 	"tryLockAndDo executes tryLock and unlock" in {
-		val lock = new MockLock with LockEx
+		val mockLock = new MockLock
+		val lock = new LockEx(mockLock)
 		lock.tryLockAndDo {
 		}
-		lock.tryLockCount must_== 1
-		lock.unlockCount must_== 1
+		mockLock.tryLockCount must_== 1
+		mockLock.unlockCount must_== 1
 	}
 
 	"tryLockTimedAndDo executes function and returns value" in {
@@ -78,11 +81,12 @@ class LockManagerSpec extends SpecificationWithJUnit {
 	}
 
 	"tryLockTimedAndDo executes tryLock and unlock" in {
-		val lock = new MockLock with LockEx
+		val mockLock = new MockLock
+		val lock = new LockEx(mockLock)
 		lock.tryLockAndDo(100, TimeUnit.MINUTES) {
 		}
-		lock.tryLockTimedCount must_== 1
-		lock.unlockCount must_== 1
+		mockLock.tryLockTimedCount must_== 1
+		mockLock.unlockCount must_== 1
 	}
 
 }
