@@ -2,9 +2,11 @@ package com.googlecode.concurrent
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.locks.ReadWriteLock
 
 /**
- * manages locks
+ * manages locks.
  *
  * @author kostantinos.kougios
  *
@@ -12,9 +14,17 @@ import java.util.concurrent.TimeUnit
  */
 object LockManager {
 	def reentrantLock = new LockEx(new ReentrantLock)
+	def readWriteLock = new ReadWriteLockLockEx(new ReentrantReadWriteLock)
 }
 
-class LockEx(lock: Lock) {
+protected class ReadWriteLockLockEx(val lock: ReadWriteLock) {
+	private val readLock = new LockEx(lock.readLock())
+	private val writeLock = new LockEx(lock.writeLock())
+
+	def readLockAndDo[T](f: => T): T = readLock.lockAndDo(f)
+}
+
+protected class LockEx(val lock: Lock) {
 
 	def lockAndDo[T](f: => T): T = {
 		lock.lock
@@ -51,5 +61,4 @@ class LockEx(lock: Lock) {
 				lock.unlock
 			}
 		else None
-
 }

@@ -1,6 +1,7 @@
 package com.googlecode.concurrent.mock
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReadWriteLock
 
 /**
  * @author kostantinos.kougios
@@ -37,4 +38,9 @@ class MockLock extends Lock {
 
 	def newCondition = null
 
+}
+
+class MockReadWriteLock extends ReadWriteLock {
+	val writeLock = new MockLock()
+	val readLock = new MockLock()
 }

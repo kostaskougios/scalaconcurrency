@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.Lock
 import com.googlecode.concurrent.mock.MockLock
 import java.util.concurrent.TimeUnit
+import com.googlecode.concurrent.mock.MockReadWriteLock
 
 /**
  * @author kostantinos.kougios
@@ -89,4 +90,18 @@ class LockManagerSpec extends SpecificationWithJUnit {
 		mockLock.unlockCount must_== 1
 	}
 
+	"readWriteLock readLock executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.readLockAndDo { c += 1; "ok" } must_== "ok"
+		c must_== 1
+	}
+
+	"readWriteLock readLock acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.readLockAndDo {}
+		mock.readLock.lockCount must_== 1
+		mock.readLock.unlockCount must_== 1
+	}
 }
