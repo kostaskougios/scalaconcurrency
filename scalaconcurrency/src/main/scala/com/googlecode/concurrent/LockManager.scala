@@ -22,6 +22,14 @@ protected class ReadWriteLockLockEx(val lock: ReadWriteLock) {
 	private val writeLock = new LockEx(lock.writeLock())
 
 	def readLockAndDo[T](f: => T): T = readLock.lockAndDo(f)
+	def readLockInterruptiblyAndDo[T](f: => T): T = readLock.lockInterruptiblyAndDo(f)
+	def tryReadLockAndDo[T](f: => T): Option[T] = readLock.tryLockAndDo(f)
+	def tryReadLockAndDo[T](time: Long, unit: TimeUnit)(f: => T): Option[T] = readLock.tryLockAndDo(time, unit)(f)
+
+	def writeLockAndDo[T](f: => T): T = writeLock.lockAndDo(f)
+	def writeLockInterruptiblyAndDo[T](f: => T): T = writeLock.lockInterruptiblyAndDo(f)
+	def tryWriteLockAndDo[T](f: => T): Option[T] = writeLock.tryLockAndDo(f)
+	def tryWriteLockAndDo[T](time: Long, unit: TimeUnit)(f: => T): Option[T] = writeLock.tryLockAndDo(time, unit)(f)
 }
 
 protected class LockEx(val lock: Lock) {

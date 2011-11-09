@@ -104,4 +104,110 @@ class LockManagerSpec extends SpecificationWithJUnit {
 		mock.readLock.lockCount must_== 1
 		mock.readLock.unlockCount must_== 1
 	}
+
+	"readWriteLock writeLock executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.writeLockAndDo { c += 1; "ok" } must_== "ok"
+		c must_== 1
+	}
+
+	"readWriteLock writeLock acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.writeLockAndDo {}
+		mock.writeLock.lockCount must_== 1
+		mock.writeLock.unlockCount must_== 1
+	}
+
+	"readWriteLock readInterrubtiblyAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.readLockInterruptiblyAndDo { c += 1; "ok" } must_== "ok"
+		c must_== 1
+	}
+
+	"readWriteLock readLockInterruptiblyAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.readLockInterruptiblyAndDo {}
+		mock.readLock.lockInterruptiblyCount must_== 1
+		mock.readLock.unlockCount must_== 1
+	}
+
+	"readWriteLock writeInterrubtiblyAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.writeLockInterruptiblyAndDo { c += 1; "ok" } must_== "ok"
+		c must_== 1
+	}
+
+	"readWriteLock writeLockInterruptiblyAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.writeLockInterruptiblyAndDo {}
+		mock.writeLock.lockInterruptiblyCount must_== 1
+		mock.writeLock.unlockCount must_== 1
+	}
+
+	"readWriteLock tryReadLockAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.tryReadLockAndDo { c += 1; "ok" } must_== Some("ok")
+		c must_== 1
+	}
+
+	"readWriteLock tryReadLockAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.tryReadLockAndDo {}
+		mock.readLock.tryLockCount must_== 1
+		mock.readLock.unlockCount must_== 1
+	}
+
+	"readWriteLock tryWriteLockAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.tryWriteLockAndDo { c += 1; "ok" } must_== Some("ok")
+		c must_== 1
+	}
+
+	"readWriteLock tryWriteLockAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.tryWriteLockAndDo {}
+		mock.writeLock.tryLockCount must_== 1
+		mock.writeLock.unlockCount must_== 1
+	}
+
+	"readWriteLock tryReadLockAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.tryReadLockAndDo(10, TimeUnit.MINUTES) { c += 1; "ok" } must_== Some("ok")
+		c must_== 1
+	}
+
+	"readWriteLock tryReadLockAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.tryReadLockAndDo(10, TimeUnit.MINUTES) {}
+		mock.readLock.tryLockTimedCount must_== 1
+		mock.readLock.unlockCount must_== 1
+	}
+
+	"readWriteLock tryWriteLockAndDo executes function" in {
+		val lock = LockManager.readWriteLock
+		var c = 0
+		lock.tryWriteLockAndDo(10, TimeUnit.MINUTES) { c += 1; "ok" } must_== Some("ok")
+		c must_== 1
+	}
+
+	"readWriteLock tryWriteLockAndDo acquires/releases lock" in {
+		val mock = new MockReadWriteLock
+		val lock = new ReadWriteLockLockEx(mock)
+		lock.tryWriteLockAndDo(10, TimeUnit.MINUTES) {}
+		mock.writeLock.tryLockTimedCount must_== 1
+		mock.writeLock.unlockCount must_== 1
+	}
+
 }
