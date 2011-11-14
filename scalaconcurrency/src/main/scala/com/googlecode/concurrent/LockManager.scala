@@ -14,10 +14,10 @@ import java.util.concurrent.locks.ReadWriteLock
  */
 object LockManager {
 	def reentrantLock = new LockEx(new ReentrantLock)
-	def readWriteLock = new ReadWriteLockLockEx(new ReentrantReadWriteLock)
+	def readWriteLock = new ReadWriteLockEx(new ReentrantReadWriteLock)
 }
 
-protected class ReadWriteLockLockEx(val lock: ReadWriteLock) {
+protected class ReadWriteLockEx(val lock: ReadWriteLock) {
 	private val readLock = new LockEx(lock.readLock())
 	private val writeLock = new LockEx(lock.writeLock())
 

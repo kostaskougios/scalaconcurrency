@@ -99,7 +99,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock readLock acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.readLockAndDo {}
 		mock.readLock.lockCount must_== 1
 		mock.readLock.unlockCount must_== 1
@@ -114,7 +114,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock writeLock acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.writeLockAndDo {}
 		mock.writeLock.lockCount must_== 1
 		mock.writeLock.unlockCount must_== 1
@@ -129,7 +129,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock readLockInterruptiblyAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.readLockInterruptiblyAndDo {}
 		mock.readLock.lockInterruptiblyCount must_== 1
 		mock.readLock.unlockCount must_== 1
@@ -144,7 +144,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock writeLockInterruptiblyAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.writeLockInterruptiblyAndDo {}
 		mock.writeLock.lockInterruptiblyCount must_== 1
 		mock.writeLock.unlockCount must_== 1
@@ -159,7 +159,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock tryReadLockAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.tryReadLockAndDo {}
 		mock.readLock.tryLockCount must_== 1
 		mock.readLock.unlockCount must_== 1
@@ -174,7 +174,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock tryWriteLockAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.tryWriteLockAndDo {}
 		mock.writeLock.tryLockCount must_== 1
 		mock.writeLock.unlockCount must_== 1
@@ -189,7 +189,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock tryReadLockAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.tryReadLockAndDo(10, TimeUnit.MINUTES) {}
 		mock.readLock.tryLockTimedCount must_== 1
 		mock.readLock.unlockCount must_== 1
@@ -204,7 +204,7 @@ class LockManagerSpec extends SpecificationWithJUnit {
 
 	"readWriteLock tryWriteLockAndDo acquires/releases lock" in {
 		val mock = new MockReadWriteLock
-		val lock = new ReadWriteLockLockEx(mock)
+		val lock = new ReadWriteLockEx(mock)
 		lock.tryWriteLockAndDo(10, TimeUnit.MINUTES) {}
 		mock.writeLock.tryLockTimedCount must_== 1
 		mock.writeLock.unlockCount must_== 1
