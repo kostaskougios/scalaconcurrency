@@ -2,6 +2,7 @@ package com.googlecode.concurrent
 import org.specs2.mutable.SpecificationWithJUnit
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
+import java.util.concurrent.TimeUnit
 
 /**
  * @author kostantinos.kougios
@@ -18,5 +19,16 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			25
 		}
 		future.get must_== 25
+	}
+
+	"scheduled callable is executed" in {
+		val executorService = ExecutorServiceManager.scheduled(5)
+
+		val start = System.currentTimeMillis
+		val future = executorService.schedule(500, TimeUnit.MILLISECONDS) { () =>
+			25
+		}
+		future.get must_== 25
+		(System.currentTimeMillis - start) must be_>(300.toLong)
 	}
 }
