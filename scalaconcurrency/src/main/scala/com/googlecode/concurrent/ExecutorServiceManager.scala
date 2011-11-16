@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.Executors
 
 /**
  * @author kostantinos.kougios
@@ -20,7 +21,7 @@ object ExecutorServiceManager {
 		protected val executorService = executor
 	}
 
-	def cached(
+	def newCachedThreadPool(
 		corePoolSize: Int,
 		maximumPoolSize: Int,
 		keepAliveTimeInSeconds: Int = 60,
@@ -33,9 +34,14 @@ object ExecutorServiceManager {
 				TimeUnit.SECONDS,
 				workQueue)
 		}
-	def scheduled(corePoolSize: Int) =
+	def newScheduledThreadPool(corePoolSize: Int) =
 		new Executor with Scheduling {
-			override protected val scheduledExecutorService = new ScheduledThreadPoolExecutor(corePoolSize)
+			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
+		}
+
+	def newFixedThreadPool(nThreads: Int) =
+		new Executor {
+			override protected val executorService = Executors.newFixedThreadPool(nThreads)
 		}
 }
 
@@ -55,10 +61,9 @@ abstract class Executor {
 	}
 }
 
-trait Scheduling { this: Executor =>
-	protected val scheduledExecutorService: ScheduledExecutorService
-	override protected val executorService = scheduledExecutorService
-	def schedule[R](delay: Long, unit: TimeUnit)(f: () => R) = scheduledExecutorService.schedule(new Callable[R] {
+trait Scheduling {
+	protected val executorService: ScheduledExecutorService
+	def schedule[R](delay: Long, unit: TimeUnit)(f: () => R) = executorService.schedule(new Callable[R] {
 		def call = f()
 	}, delay, unit)
 }
