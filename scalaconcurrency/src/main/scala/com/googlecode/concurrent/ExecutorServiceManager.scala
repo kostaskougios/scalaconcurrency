@@ -51,6 +51,11 @@ object ExecutorServiceManager {
 		}
 }
 
+/**
+ * wrapper for the ExecutorService
+ *
+ * new Executor with Shutdown
+ */
 abstract class Executor {
 	// ideally the underlying executor should not be accessible
 	protected val executorService: ExecutorService
@@ -62,6 +67,9 @@ abstract class Executor {
 	def submit(task: Runnable) = executorService.submit(task)
 }
 
+/*
+ * new Executor with Scheduling with Shutdown
+ */
 trait Scheduling {
 	protected val executorService: ScheduledExecutorService
 	def schedule[R](delay: Long, unit: TimeUnit)(f: () => R) = executorService.schedule(new Callable[R] {
@@ -69,6 +77,9 @@ trait Scheduling {
 	}, delay, unit)
 }
 
+/**
+ * provides shutdown services to Executor
+ */
 trait Shutdown {
 	protected val executorService: ExecutorService
 	def shutdown = executorService.shutdown
@@ -79,6 +90,10 @@ trait Shutdown {
 		awaitTermination(waitTimeInSeconds, TimeUnit.SECONDS)
 	}
 }
+
+/*
+ * @see CompletionService
+ */
 abstract class CompletionExecutor[V] {
 	protected val executorService: ExecutorService
 	private val completionService = new ExecutorCompletionService[V](executorService)
@@ -88,18 +103,45 @@ abstract class CompletionExecutor[V] {
 	def submit(task: Callable[V]) = completionService.submit(task)
 	def submit(task: Runnable, result: V) = completionService.submit(task, result)
 
-	def take: Option[Future[V]] = {
-		val t = completionService.take
-		if (t == null) None else Some(t)
-	}
+	/**
+	 * Retrieves and removes the Future representing the next
+	 * completed task, waiting if none are yet present.
+	 *
+	 * @return the Future representing the next completed task
+	 * @throws InterruptedException if interrupted while waiting
+	 */
+	def take: Future[V] = completionService.take
 
+	/**
+	 * Retrieves and removes the Future representing the next
+	 * completed task or <tt>None</tt> if none are present.
+	 *
+	 * @return the Future representing the next completed task, or
+	 *         <tt>None</tt> if none are present
+	 */
 	def poll: Option[Future[V]] = {
 		val t = completionService.poll
 		if (t == null) None else Some(t)
 	}
 
+	/**
+	 * Retrieves and removes the Future representing the next
+	 * completed task, waiting if necessary up to the specified wait
+	 * time if none are yet present.
+	 *
+	 * @param timeout how long to wait before giving up, in units of
+	 *        <tt>unit</tt>
+	 * @param unit a <tt>TimeUnit</tt> determining how to interpret the
+	 *        <tt>timeout</tt> parameter
+	 * @return the Future representing the next completed task or
+	 *         <tt>None</tt> if the specified waiting time elapses
+	 *         before one is present
+	 * @throws InterruptedException if interrupted while waiting
+	 */
 	def poll(timeout: Long, unit: TimeUnit): Option[Future[V]] = {
 		val t = completionService.poll(timeout, unit)
 		if (t == null) None else Some(t)
 	}
+
+	def pollWaitInMillis(timeoutMs: Long): Option[Future[V]] = poll(timeoutMs, TimeUnit.MILLISECONDS)
 }
