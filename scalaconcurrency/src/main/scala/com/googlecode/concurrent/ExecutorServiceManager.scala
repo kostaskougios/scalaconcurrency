@@ -40,6 +40,20 @@ object ExecutorServiceManager {
 				TimeUnit.SECONDS,
 				workQueue)
 		}
+	def newCachedThreadPoolCompletionService[V](
+		corePoolSize: Int,
+		maximumPoolSize: Int,
+		keepAliveTimeInSeconds: Int = 60,
+		workQueue: BlockingQueue[Runnable] = new SynchronousQueue) =
+		new CompletionExecutor[V](
+			new ThreadPoolExecutor(
+				corePoolSize,
+				maximumPoolSize,
+				keepAliveTimeInSeconds,
+				TimeUnit.SECONDS,
+				workQueue)
+		)
+
 	def newScheduledThreadPool(corePoolSize: Int) =
 		new Executor with Shutdown with Scheduling {
 			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
@@ -49,6 +63,8 @@ object ExecutorServiceManager {
 		new Executor with Shutdown {
 			override protected val executorService = Executors.newFixedThreadPool(nThreads)
 		}
+	def newFixedThreadPoolCompletionService[V](nThreads: Int) =
+		new CompletionExecutor[V](Executors.newFixedThreadPool(nThreads))
 }
 
 /**
@@ -60,8 +76,8 @@ abstract class Executor {
 	// ideally the underlying executor should not be accessible
 	protected val executorService: ExecutorService
 
-	def submit[R](f: () => R) = executorService.submit(new Callable[R] {
-		def call = f()
+	def submit[R](f: => R) = executorService.submit(new Callable[R] {
+		def call = f
 	})
 	def submit[V](task: Callable[V]) = executorService.submit(task)
 	def submit(task: Runnable) = executorService.submit(task)
@@ -72,8 +88,8 @@ abstract class Executor {
  */
 trait Scheduling {
 	protected val executorService: ScheduledExecutorService
-	def schedule[R](delay: Long, unit: TimeUnit)(f: () => R) = executorService.schedule(new Callable[R] {
-		def call = f()
+	def schedule[R](delay: Long, unit: TimeUnit)(f: => R) = executorService.schedule(new Callable[R] {
+		def call = f
 	}, delay, unit)
 }
 
@@ -94,11 +110,10 @@ trait Shutdown {
 /*
  * @see CompletionService
  */
-abstract class CompletionExecutor[V] {
-	protected val executorService: ExecutorService
+class CompletionExecutor[V](protected val executorService: ExecutorService) extends Shutdown {
 	private val completionService = new ExecutorCompletionService[V](executorService)
-	def submit(f: () => V) = completionService.submit(new Callable[V] {
-		def call = f()
+	def submit(f: => V): Future[V] = completionService.submit(new Callable[V] {
+		def call = f
 	})
 	def submit(task: Callable[V]) = completionService.submit(task)
 	def submit(task: Runnable, result: V) = completionService.submit(task, result)
