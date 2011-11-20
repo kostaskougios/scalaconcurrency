@@ -63,8 +63,26 @@ object ExecutorServiceManager {
 		new Executor with Shutdown {
 			override protected val executorService = Executors.newFixedThreadPool(nThreads)
 		}
+
 	def newFixedThreadPoolCompletionService[V](nThreads: Int) =
 		new CompletionExecutor[V](Executors.newFixedThreadPool(nThreads))
+
+	/**
+	 * creates an executor of nThread, submits f() x times and returns V x times
+	 * as returned by f(). It then shutsdown the executor.
+	 *
+	 * f: Int => V , where Int is the i-th execution, i is between [1..times]
+	 * inclusive.
+	 */
+	def lifecycle[V](nThreads: Int, times: Int)(f: Int => V): Seq[V] = {
+		val pool = newFixedThreadPool(nThreads)
+		try {
+			val seq = for (i <- 1 to times) yield pool.submit(f(i))
+			seq.map(_.get)
+		} finally {
+			pool.shutdown
+		}
+	}
 }
 
 /**

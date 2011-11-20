@@ -4,6 +4,7 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author kostantinos.kougios
@@ -12,6 +13,17 @@ import java.util.concurrent.RejectedExecutionException
  */
 @RunWith(classOf[JUnitRunner])
 class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
+
+	"lifecycle" in {
+		val threads = new ConcurrentHashMap[Thread, Thread]
+		val results = ExecutorServiceManager.lifecycle(5, 20) { i =>
+			val ct = Thread.currentThread
+			threads.put(ct, ct)
+			100 + i
+		}
+		results.toSet must_== (101 to 120).toSet
+		threads.size must_== 5
+	}
 
 	"cached pool, f is executed" in {
 		val executorService = ExecutorServiceManager.newCachedThreadPool(5, 5)
