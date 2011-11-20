@@ -73,6 +73,10 @@ object ExecutorServiceManager {
 	 *
 	 * f: Int => V , where Int is the i-th execution, i is between [1..times]
 	 * inclusive.
+	 *
+	 * If any of the invocation of f() fails, the executor will be shut down
+	 * and no further threads will be submitted to it. The exception will propagate
+	 * to the caller.
 	 */
 	def lifecycle[V](nThreads: Int, times: Int)(f: Int => V): Seq[V] = {
 		val pool = newFixedThreadPool(nThreads)
