@@ -1,9 +1,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.googlecode</groupId>
+	<groupId>com.googlecode.scalaconcurrency</groupId>
 	<artifactId>scalaconcurrency</artifactId>
-	<version>0.1.0</version>
+	<version>0.5.0</version>
 	<name>scalaconcurrency</name>
+	<description>
+		Wrapper classes for jdk5, and 7 concurrency package
+	</description>
+	<url>https://code.google.com/p/scalaconcurrency/</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:svn:https://scalaconcurrency.googlecode.com/svn/trunk/</connection>
+		<developerConnection>scm:svn:https://scalaconcurrency.googlecode.com/svn/trunk/</developerConnection>
+		<url>https://code.google.com/p/scalaconcurrency/source/browse/</url>
+	</scm>
+	<issueManagement>
+		<system>Google Code</system>
+		<url>https://code.google.com/p/scalaconcurrency/issues/list</url>
+	</issueManagement>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<scala.version>2.9.1</scala.version>
@@ -119,4 +138,15 @@
 			<url>http://scala-tools.org/repo-releases</url>
 		</pluginRepository>
 	</pluginRepositories>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<distributionManagement>
+				<repository>
+					<id>scala-tools.org</id>
+					<url>http://nexus.scala-tools.org/content/repositories/releases</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 </project>
