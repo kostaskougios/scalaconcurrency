@@ -13,6 +13,16 @@ import java.util.concurrent.ConcurrentHashMap
  */
 @RunWith(classOf[JUnitRunner])
 class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
+	"lifecycle with params" in {
+		val threads = new ConcurrentHashMap[Thread, Thread]
+		val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) { param =>
+			val ct = Thread.currentThread
+			threads.put(ct, ct)
+			100 + param
+		}
+		results.toList must_== List(105, 110, 115, 120, 125, 130, 135, 140)
+		threads.size must_== 5
+	}
 
 	"lifecycle" in {
 		val threads = new ConcurrentHashMap[Thread, Thread]

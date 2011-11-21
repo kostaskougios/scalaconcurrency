@@ -87,6 +87,26 @@ object ExecutorServiceManager {
 			pool.shutdown
 		}
 	}
+
+	/**
+	 * creates an executor of nThread, submits f() x params.size and returns V x params.size
+	 * as returned by f(). It then shutsdown the executor.
+	 *
+	 * f: T => V , each thread getting a different parameter from the traversable
+	 *
+	 * If any of the invocation of f() fails, the executor will be shut down
+	 * and no further threads will be submitted to it. The exception will propagate
+	 * to the caller.
+	 */
+	def lifecycle[T, V](nThreads: Int, params: Traversable[T])(f: T => V): Traversable[V] = {
+		val pool = newFixedThreadPool(nThreads)
+		try {
+			val results = params.map(param => pool.submit(f(param)))
+			results.map(_.get)
+		} finally {
+			pool.shutdown
+		}
+	}
 }
 
 /**
