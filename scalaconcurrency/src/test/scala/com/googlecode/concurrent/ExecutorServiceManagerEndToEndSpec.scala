@@ -74,17 +74,44 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 		}
 	}
 
+	"scheduled pool, run periodically(simple)" in {
+		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
+
+		try {
+			val start = System.currentTimeMillis
+			@volatile var counter = 0
+			@volatile var fcounter = 0
+
+			def processor = {
+				counter += 1
+				if (counter < 3) Some(ExecutorServiceManagerEndToEndSpec.aHundredMs) else None
+			}
+
+			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.aHundredMs, processor) {
+				fcounter += 1
+				25
+			}
+
+			Thread.sleep(500)
+			counter must_== 3
+			fcounter must_== 3
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
+
 	"scheduled pool, run periodically" in {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
 			val start = System.currentTimeMillis
 			@volatile var counter = 0
-			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.halfSec, { result: Int =>
+			val processor = { result: Int =>
 				assert(result == 25 + counter) // on a different thread, matchers don't work here
 				counter += 1
 				if (counter == 1) Some(ExecutorServiceManagerEndToEndSpec.aSec) else None
-			}) {
+			}
+			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.halfSec, processor) {
 				25 + counter
 			}
 			Thread.sleep(1700)
@@ -207,4 +234,5 @@ object ExecutorServiceManagerEndToEndSpec {
 	def aSec = DateTime.now + 1.second
 	def halfSec = DateTime.now + 500.millis
 	def pastTime = DateTime.now - 1.second
+	def aHundredMs = DateTime.now + 100.millis
 }

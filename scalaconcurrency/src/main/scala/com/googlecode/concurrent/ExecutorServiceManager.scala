@@ -155,13 +155,20 @@ trait Scheduling {
 	}
 
 	def runPeriodically[R](firstRun: DateTime, process: R => Option[DateTime])(f: => R): Unit =
-		{
-			schedule(firstRun) {
-				val r = f
-				process(r) match {
-					case Some(nextRun) => runPeriodically(nextRun, process)(f)
-					case None =>
-				}
+		schedule(firstRun) {
+			val r = f
+			process(r) match {
+				case Some(nextRun) => runPeriodically(nextRun, process)(f)
+				case None =>
+			}
+		}
+
+	def runPeriodically[R](firstRun: DateTime, process: => Option[DateTime])(f: => R): Unit =
+		schedule(firstRun) {
+			f
+			process match {
+				case Some(nextRun) => runPeriodically(nextRun, process)(f)
+				case None =>
 			}
 		}
 }
@@ -173,10 +180,20 @@ trait Shutdown {
 	protected val executorService: ExecutorService
 	def shutdown = executorService.shutdown
 	def shutdownNow = executorService.shutdownNow
-	def awaitTermination(timeout: Long, unit: TimeUnit) = executorService.awaitTermination(timeout, unit)
+	def awaitTermination(timeout: Long, unit: TimeUnit): Unit = executorService.awaitTermination(timeout, unit)
+
+	import org.scala_tools.time.Imports._
+
+	def awaitTermination(timeoutWhen: DateTime): Unit = awaitTermination(timeoutWhen.millis - System.currentTimeMillis, TimeUnit.MILLISECONDS)
+
 	def shutdownAndAwaitTermination(waitTimeInSeconds: Int) {
 		shutdown
 		awaitTermination(waitTimeInSeconds, TimeUnit.SECONDS)
+	}
+
+	def shutdownAndAwaitTermination(timeoutWhen: DateTime) {
+		shutdown
+		awaitTermination(timeoutWhen)
 	}
 }
 
