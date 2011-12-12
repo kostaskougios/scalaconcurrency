@@ -12,6 +12,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.CompletionService
 import java.util.concurrent.Future
+import java.util.concurrent.ScheduledFuture
 
 /**
  * manages executor instantiation, provides factory methods
@@ -130,9 +131,39 @@ abstract class Executor {
  */
 trait Scheduling {
 	protected val executorService: ScheduledExecutorService
-	def schedule[R](delay: Long, unit: TimeUnit)(f: => R) = executorService.schedule(new Callable[R] {
+
+	/**
+	 * val future=schedule(100,TimeUnit.MILLISECONDS) {
+	 * 	// to do in 100 millis from now
+	 * }
+	 */
+	def schedule[R](delay: Long, unit: TimeUnit)(f: => R): ScheduledFuture[R] = executorService.schedule(new Callable[R] {
 		def call = f
 	}, delay, unit)
+
+	import org.scala_tools.time.Imports._
+
+	/**
+	 * usage: val future=schedule(DateTime.now + 2.days) {
+	 * 	// to do in 2 days from now
+	 * }
+	 */
+	def schedule[R](nextRun: DateTime): (=> R) => ScheduledFuture[R] = {
+		val dt = nextRun.millis - System.currentTimeMillis
+		if (dt < 0) throw new IllegalArgumentException("next run time is in the past : %s".format(nextRun))
+		schedule(dt, TimeUnit.MILLISECONDS) _
+	}
+
+	def runPeriodically[R](firstRun: DateTime, process: R => Option[DateTime])(f: => R): Unit =
+		{
+			schedule(firstRun) {
+				val r = f
+				process(r) match {
+					case Some(nextRun) => runPeriodically(nextRun, process)(f)
+					case None =>
+				}
+			}
+		}
 }
 
 /**

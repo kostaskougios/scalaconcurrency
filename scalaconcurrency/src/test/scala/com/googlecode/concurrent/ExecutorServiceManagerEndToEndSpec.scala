@@ -74,6 +74,26 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 		}
 	}
 
+	"scheduled pool, run periodically" in {
+		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
+
+		try {
+			val start = System.currentTimeMillis
+			@volatile var counter = 0
+			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.halfSec, { result: Int =>
+				assert(result == 25 + counter) // on a different thread, matchers don't work here
+				counter += 1
+				if (counter == 1) Some(ExecutorServiceManagerEndToEndSpec.aSec) else None
+			}) {
+				25 + counter
+			}
+			Thread.sleep(1700)
+			counter must_== 2
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
+
 	"scheduled pool, f is executed" in {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
@@ -89,6 +109,41 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 		}
 	}
 
+	"scheduled pool, with datetime" in {
+		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
+
+		try {
+			val start = System.currentTimeMillis
+			val future = executorService.schedule(ExecutorServiceManagerEndToEndSpec.aSec /* avoid specs2 implicits */ ) {
+				25
+			}
+			future.get must_== 25
+			(System.currentTimeMillis - start) must be_>(900.toLong)
+
+			val start2 = System.currentTimeMillis
+			val future2 = executorService.schedule(ExecutorServiceManagerEndToEndSpec.halfSec /* avoid specs2 implicits */ ) {
+				26
+			}
+			future2.get must_== 26
+			(System.currentTimeMillis - start2) must be_>(450.toLong)
+
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
+
+	"scheduled pool, with datetime in the past" in {
+		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
+
+		try {
+			executorService.schedule(ExecutorServiceManagerEndToEndSpec.pastTime /* avoid specs2 implicits */ ) {
+				25
+			} must throwA[IllegalArgumentException]
+
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
 	"cached completion service, f is executed" in {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
@@ -143,4 +198,13 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
+}
+
+object ExecutorServiceManagerEndToEndSpec {
+	import org.scala_tools.time.Imports._
+
+	// avoid spec2 implicit time conversions 
+	def aSec = DateTime.now + 1.second
+	def halfSec = DateTime.now + 500.millis
+	def pastTime = DateTime.now - 1.second
 }
