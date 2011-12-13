@@ -12,7 +12,7 @@ object ReentrantLock extends App {
 
 	ExecutorServiceManager.lifecycle(10, 10000) { counter =>
 		// tries to lock, upon success executes the function and return Some("ok").
-		// if lock is aquired by an other thread, returns None without executing
+		// if lock is already aquired by an other thread, returns None without executing
 		// the function
 		val result = lock.tryLockAndDo {
 			println("yeah, got the lock, will keep it for a while!")
