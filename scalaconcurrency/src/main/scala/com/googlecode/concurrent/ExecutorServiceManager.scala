@@ -119,9 +119,23 @@ abstract class Executor {
 	// ideally the underlying executor should not be accessible
 	protected val executorService: ExecutorService
 
+	/**
+	 * submits a task for execution and returns a Future.
+	 *
+	 * example:
+	 * <code>
+	 * val future=executor.submit {
+	 * 	// will run on a separate thread soon
+	 * 25
+	 * }
+	 * ...
+	 * val result = future.get // result=25
+	 * </code>
+	 */
 	def submit[R](f: => R) = executorService.submit(new Callable[R] {
 		def call = f
 	})
+
 	def submit[V](task: Callable[V]) = executorService.submit(task)
 	def submit(task: Runnable) = executorService.submit(task)
 }
@@ -133,9 +147,17 @@ trait Scheduling {
 	protected val executorService: ScheduledExecutorService
 
 	/**
+	 * schedules a task to run in the future
+	 *
+	 * example:
+	 *
+	 * <code>
 	 * val future=schedule(100,TimeUnit.MILLISECONDS) {
 	 * 	// to do in 100 millis from now
 	 * }
+	 * ...
+	 * val result=future.get
+	 * </code>
 	 */
 	def schedule[R](delay: Long, unit: TimeUnit)(f: => R): ScheduledFuture[R] = executorService.schedule(new Callable[R] {
 		def call = f
@@ -144,16 +166,35 @@ trait Scheduling {
 	import org.scala_tools.time.Imports._
 
 	/**
+	 * schedule a task to run in the future.
+	 *
+	 * example:
+	 * <code>
 	 * usage: val future=schedule(DateTime.now + 2.days) {
 	 * 	// to do in 2 days from now
 	 * }
+	 * </code>
 	 */
-	def schedule[R](nextRun: DateTime): (=> R) => ScheduledFuture[R] = {
-		val dt = nextRun.millis - System.currentTimeMillis
-		if (dt < 0) throw new IllegalArgumentException("next run time is in the past : %s".format(nextRun))
+	def schedule[R](runAt: DateTime): (=> R) => ScheduledFuture[R] = {
+		val dt = runAt.millis - System.currentTimeMillis
+		if (dt < 0) throw new IllegalArgumentException("next run time is in the past : %s".format(runAt))
 		schedule(dt, TimeUnit.MILLISECONDS) _
 	}
 
+	/**
+	 * runs a task periodically. The task initially runs on firstTime. The result R is then
+	 * used to call process(R) and if that returns a new DateTime, the task will be executed
+	 * again on that time. If process(R) returns None, the task won't be executed again.
+	 *
+	 * This method returns straight away, any processing occurs on separate threads using
+	 * the executor.
+	 *
+	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
+	 * @param process		a function to process the result and specify the next
+	 * 						time the task should run. The value is calculated after f is
+	 * 						executed and if None the task will not be executed anymore.
+	 * @param f				the task
+	 */
 	def runPeriodically[R](firstRun: DateTime, process: R => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
 			val r = f
@@ -163,6 +204,34 @@ trait Scheduling {
 			}
 		}
 
+	/**
+	 * periodically runs f, starting on firstRun and repeating according to
+	 * the calculated "process" value.
+	 *
+	 * example:
+	 * <code>
+	 *
+	 * import org.scala_tools.time.Imports._
+	 *
+	 * val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
+	 *
+	 * val start = System.currentTimeMillis
+	 * executorService.runPeriodically(DateTime.now + 50.millis, Some(DateTime.now + 1.second)) {
+	 * // should print dt 6 times, once per second
+	 * println("dt:%d".format(System.currentTimeMillis - start))
+	 * }
+	 *
+	 * Thread.sleep(5500)
+	 * executorService.shutdownAndAwaitTermination(DateTime.now + 100.millis)
+	 *
+	 * </code>
+	 *
+	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
+	 * @param process		a by-value parameter specifying the next time the task should
+	 * 						run. The value is calculated after f is executed and if None
+	 * 						the task will not be executed anymore.
+	 * @param f				the task
+	 */
 	def runPeriodically[R](firstRun: DateTime, process: => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
 			f

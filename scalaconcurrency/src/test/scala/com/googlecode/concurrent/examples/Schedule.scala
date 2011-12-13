@@ -13,8 +13,8 @@ object Schedule extends App {
 	val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 	val start = System.currentTimeMillis
-	executorService.runPeriodically(DateTime.now + 50, Some(DateTime.now + 1.second)) {
-		// should print dt five times
+	executorService.runPeriodically(DateTime.now + 50.millis, Some(DateTime.now + 1.second)) {
+		// should print dt 6 times, once per second
 		println("dt:%d".format(System.currentTimeMillis - start))
 	}
 
