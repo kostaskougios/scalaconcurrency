@@ -1,4 +1,4 @@
-package com.googlecode.concurrent.examples
+package com.googlecode.concurrent.examples.executors
 
 import com.googlecode.concurrent.ExecutorServiceManager
 
