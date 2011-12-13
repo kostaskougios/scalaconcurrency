@@ -171,6 +171,7 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
+
 	"cached completion service, f is executed" in {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
@@ -211,6 +212,7 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
+
 	"cached completion service, 2 tasks positive" in {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 

@@ -26,7 +26,7 @@ object LifeCycle extends App {
 	// each time the function is called, i is between 1..20. The function
 	// results are appended to a collection
 	val results2 = ExecutorServiceManager.lifecycle(5, 20) { i =>
-		100 + i
+		100 + i // a heavy calculation (not necessarily based on i!)
 	}
 	println(results2) // Vector(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120)
 }
