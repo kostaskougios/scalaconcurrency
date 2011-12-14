@@ -16,7 +16,7 @@ class LockManagerEndToEndSpec extends SpecificationWithJUnit {
 		val pool = new ThreadPoolRunner {
 			val executor = Executors.newFixedThreadPool(10)
 			override def shutdown = {
-				executor.shutdown()
+				executor.shutdown
 				executor.awaitTermination(1000, TimeUnit.SECONDS)
 			}
 		}

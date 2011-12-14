@@ -13,7 +13,9 @@ object LifeCycle extends App {
 	// ========================================================================================
 	// An executor will be created. The executor will have a pool of 5 threads.
 	// for every list item, it will execute the function using the executor (separate thread).
-	// It will collect the results and then shutdown the executor.
+	// It will collect the results and then shutdown the executor. This is not the most
+	// efficient use of executors since the threads are terminated. But it significantly helps
+	// to do calculations in parallel and the API is very simple to use.
 	val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) { param =>
 		100 + param // this should be a relative heavy calculation
 	}

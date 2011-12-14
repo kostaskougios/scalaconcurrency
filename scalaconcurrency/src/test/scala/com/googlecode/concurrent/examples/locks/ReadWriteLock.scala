@@ -3,6 +3,10 @@ import com.googlecode.concurrent.LockManager
 import com.googlecode.concurrent.ExecutorServiceManager
 
 /**
+ * a read/write lock is created with 4 threads acquiring a read lock
+ * and 1 thread a write lock. While the write lock is acquired, the 4
+ * threads have to wait till it is released
+ *
  * @author kostantinos.kougios
  *
  * 13 Dec 2011

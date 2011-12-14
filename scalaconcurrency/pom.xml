@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.googlecode.scalaconcurrency</groupId>
 	<artifactId>scalaconcurrency</artifactId>
-	<version>0.6.0</version>
+	<version>0.7.0</version>
 	<name>scalaconcurrency</name>
 	<description>
 		Wrapper classes for jdk5, and 7 concurrency package

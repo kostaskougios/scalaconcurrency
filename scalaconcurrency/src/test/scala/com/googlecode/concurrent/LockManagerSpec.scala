@@ -13,6 +13,19 @@ import com.googlecode.concurrent.mock.MockReadWriteLock
  */
 class LockManagerSpec extends SpecificationWithJUnit {
 
+	"tryLockAndDo, datetime, executes function and returns value" in {
+		var c = 0
+		val lock = LockManager.reentrantLock
+
+		import org.scala_tools.time.Imports._
+
+		lock.tryLockAndDo(DateTime.now.plus(10)) {
+			c += 1
+			"ok"
+		} must_== Some("ok")
+		c must_== 1
+	}
+
 	"lockAndDo executes function and returns value" in {
 		var c = 0
 		val lock = LockManager.reentrantLock

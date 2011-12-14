@@ -4,6 +4,7 @@ import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.concurrent.locks.ReadWriteLock
+import org.scala_tools.time.Imports._
 
 /**
  * manages locks.
@@ -60,6 +61,9 @@ protected class LockEx(val lock: Lock) {
 				lock.unlock
 			}
 		else None
+
+	def tryLockAndDo[T](when: DateTime)(f: => T): Option[T] =
+		tryLockAndDo(when.millis, TimeUnit.MILLISECONDS)(f)
 
 	def tryLockAndDo[T](time: Long, unit: TimeUnit)(f: => T): Option[T] =
 		if (lock.tryLock(time, unit))
