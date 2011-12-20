@@ -63,7 +63,7 @@ protected class LockEx(val lock: Lock) {
 		else None
 
 	def tryLockAndDo[T](when: DateTime)(f: => T): Option[T] =
-		tryLockAndDo(when.millis, TimeUnit.MILLISECONDS)(f)
+		tryLockAndDo(when.millis - System.currentTimeMillis, TimeUnit.MILLISECONDS)(f)
 
 	def tryLockAndDo[T](time: Long, unit: TimeUnit)(f: => T): Option[T] =
 		if (lock.tryLock(time, unit))

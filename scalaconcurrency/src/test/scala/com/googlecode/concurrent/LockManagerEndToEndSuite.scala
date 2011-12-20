@@ -1,18 +1,22 @@
 package com.googlecode.concurrent
-import org.specs2.mutable.SpecificationWithJUnit
 import java.util.concurrent.Executors
 import scala.concurrent.ops._
 import java.util.concurrent.atomic.AtomicInteger
 import scala.concurrent.ThreadPoolRunner
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import org.scalatest.FunSuite
+import org.scalatest.matchers.ShouldMatchers
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
 /**
  * @author kostantinos.kougios
  *
  * 9 Nov 2011
  */
-class LockManagerEndToEndSpec extends SpecificationWithJUnit {
-	"tryLockAndDo" in {
+class LockManagerEndToEndSuite extends FunSuite with ShouldMatchers {
+	test("tryLockAndDo") {
 		val pool = new ThreadPoolRunner {
 			val executor = Executors.newFixedThreadPool(10)
 			override def shutdown = {
@@ -26,7 +30,7 @@ class LockManagerEndToEndSpec extends SpecificationWithJUnit {
 		val errors = new AtomicInteger
 		val rfs = for (i <- 0 to 4) yield {
 			import pool._
-			execute { () =>
+			pool.execute { () =>
 				for (i <- 0 to 1000) {
 					lock.readLockAndDo {
 						if (writers.get > 0) errors.incrementAndGet
@@ -50,8 +54,8 @@ class LockManagerEndToEndSpec extends SpecificationWithJUnit {
 			}
 		}
 		pool.shutdown()
-		readers.get must_== 0
-		writers.get must_== 0
-		errors.get must_== 0
+		readers.get should be === 0
+		writers.get should be === 0
+		errors.get should be === 0
 	}
 }

@@ -1,10 +1,12 @@
 package com.googlecode.concurrent
-import org.specs2.mutable.SpecificationWithJUnit
 import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ConcurrentHashMap
+import org.scalatest.FunSuite
+import org.scalatest.matchers.ShouldMatchers
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 /**
  * @author kostantinos.kougios
@@ -12,69 +14,71 @@ import java.util.concurrent.ConcurrentHashMap
  * 15 Nov 2011
  */
 @RunWith(classOf[JUnitRunner])
-class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
-	"lifecycle with params" in {
+class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
+	test("lifecycle with params") {
 		val threads = new ConcurrentHashMap[Thread, Thread]
 		val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) { param =>
 			val ct = Thread.currentThread
 			threads.put(ct, ct)
 			100 + param
 		}
-		results.toList must_== List(105, 110, 115, 120, 125, 130, 135, 140)
-		threads.size must_== 5
+		results.toList should be === List(105, 110, 115, 120, 125, 130, 135, 140)
+		threads.size should be === 5
 	}
 
-	"lifecycle" in {
+	test("lifecycle") {
 		val threads = new ConcurrentHashMap[Thread, Thread]
 		val results = ExecutorServiceManager.lifecycle(5, 20) { i =>
 			val ct = Thread.currentThread
 			threads.put(ct, ct)
 			100 + i
 		}
-		results.toSet must_== (101 to 120).toSet
-		threads.size must_== 5
+		results.toSet should be === (101 to 120).toSet
+		threads.size should be === 5
 	}
 
-	"cached pool, f is executed" in {
+	test("cached pool, f is executed") {
 		val executorService = ExecutorServiceManager.newCachedThreadPool(5, 5)
 
 		try {
 			val future = executorService.submit {
 				25
 			}
-			future.get must_== 25
+			future.get should be === 25
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"cached pool, limits are valid" in {
+	test("cached pool, limits are valid") {
 		val executorService = ExecutorServiceManager.newCachedThreadPool(5, 10)
 
 		val start = System.currentTimeMillis
 		try {
-			(for (i <- 0 to 15) yield executorService.submit {
-				Thread.sleep(100)
-			}).map(_.get) must throwA[RejectedExecutionException]
+			evaluating {
+				(for (i <- 0 to 15) yield executorService.submit {
+					Thread.sleep(100)
+				}).map(_.get)
+			} should produce[RejectedExecutionException]
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"fixed pool, f is executed" in {
+	test("fixed pool, f is executed") {
 		val executorService = ExecutorServiceManager.newFixedThreadPool(5)
 
 		try {
 			val future = executorService.submit {
 				25
 			}
-			future.get must_== 25
+			future.get should be === 25
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"scheduled pool, run periodically(simple)" in {
+	test("scheduled pool, run periodically(simple)") {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
@@ -93,14 +97,14 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			}
 
 			Thread.sleep(500)
-			counter must_== 3
-			fcounter must_== 3
+			counter should be === 3
+			fcounter should be === 3
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"scheduled pool, run periodically" in {
+	test("scheduled pool, run periodically") {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
@@ -115,13 +119,13 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 				25 + counter
 			}
 			Thread.sleep(1700)
-			counter must_== 2
+			counter should be === 2
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"scheduled pool, f is executed" in {
+	test("scheduled pool, f is executed") {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
@@ -129,14 +133,14 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			val future = executorService.schedule(500, TimeUnit.MILLISECONDS) {
 				25
 			}
-			future.get must_== 25
-			(System.currentTimeMillis - start) must be_>(300.toLong)
+			future.get should be === 25
+			(System.currentTimeMillis - start) should be > (300.toLong)
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"scheduled pool, with datetime" in {
+	test("scheduled pool, with datetime") {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
@@ -144,62 +148,50 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 			val future = executorService.schedule(ExecutorServiceManagerEndToEndSpec.aSec /* avoid specs2 implicits */ ) {
 				25
 			}
-			future.get must_== 25
-			(System.currentTimeMillis - start) must be_>(900.toLong)
+			future.get should be === 25
+			(System.currentTimeMillis - start) should be > (900.toLong)
 
 			val start2 = System.currentTimeMillis
 			val future2 = executorService.schedule(ExecutorServiceManagerEndToEndSpec.halfSec /* avoid specs2 implicits */ ) {
 				26
 			}
-			future2.get must_== 26
-			(System.currentTimeMillis - start2) must be_>(450.toLong)
+			future2.get should be === 26
+			(System.currentTimeMillis - start2) should be > (450.toLong)
 
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"scheduled pool, with datetime in the past" in {
+	test("scheduled pool, with datetime in the past") {
 		val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 		try {
-			executorService.schedule(ExecutorServiceManagerEndToEndSpec.pastTime /* avoid specs2 implicits */ ) {
-				25
-			} must throwA[IllegalArgumentException]
+			evaluating {
+				executorService.schedule(ExecutorServiceManagerEndToEndSpec.pastTime /* avoid specs2 implicits */ ) {
+					25
+				}
+			} should produce[IllegalArgumentException]
 
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"cached completion service, f is executed" in {
+	test("cached completion service, f is executed") {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
 		try {
 			executorService.submit {
 				25
 			}
-			executorService.take.get must_== 25
+			executorService.take.get should be === 25
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"cached completion service, timed poll positive" in {
-		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
-
-		try {
-			executorService.submit {
-				Thread.sleep(500)
-				25
-			}
-			executorService.pollWaitInMillis(800).get.get must_== 25
-		} finally {
-			executorService.shutdownAndAwaitTermination(1)
-		}
-	}
-
-	"cached completion service, timed poll negative" in {
+	test("cached completion service, timed poll positive") {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
 		try {
@@ -207,22 +199,36 @@ class ExecutorServiceManagerEndToEndSpec extends SpecificationWithJUnit {
 				Thread.sleep(500)
 				25
 			}
-			executorService.pollWaitInMillis(200) must beNone
+			executorService.pollWaitInMillis(800).get.get should be === 25
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
 
-	"cached completion service, 2 tasks positive" in {
+	test("cached completion service, timed poll negative") {
+		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
+
+		try {
+			executorService.submit {
+				Thread.sleep(500)
+				25
+			}
+			executorService.pollWaitInMillis(200) should be(None)
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
+
+	test("cached completion service, 2 tasks positive") {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
 		try {
 			executorService.submit { 25 }
 			executorService.submit { Thread.sleep(100); 26 }
 
-			executorService.take.get must_== 25
-			executorService.take.get must_== 26
-			executorService.poll must beNone
+			executorService.take.get should be === 25
+			executorService.take.get should be === 26
+			executorService.poll should be(None)
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
