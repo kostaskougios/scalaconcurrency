@@ -17,6 +17,53 @@ import org.scalatest.junit.JUnitRunner
  */
 @RunWith(classOf[JUnitRunner])
 class LockManagerSuite extends FunSuite with ShouldMatchers {
+	test("tryReadLockAndDo/tryWriteLockAndDo, datetime, fails within time") {
+		val lock = LockManager.readWriteLock
+		// acquire lock on a different thread
+		val t = new Thread {
+			override def run {
+				lock.tryReadLockAndDo {
+					Thread.sleep(1000)
+				}
+			}
+		}
+
+		t.start
+		Thread.sleep(200)
+		import org.scala_tools.time.Imports._
+
+		val start = System.currentTimeMillis
+		lock.tryWriteLockAndDo(DateTime.now + 100.millis) {
+			"ok"
+		} should be(None)
+
+		// did it wait?
+		(System.currentTimeMillis - start) should be > 50.toLong
+	}
+	test("tryReadLockAndDo/tryWriteLockAndDo, datetime, aquires lock before timeout") {
+		val lock = LockManager.readWriteLock
+		// acquire lock on a different thread
+		val t = new Thread {
+			override def run {
+				lock.tryReadLockAndDo {
+					Thread.sleep(500)
+				}
+			}
+		}
+
+		t.start
+		Thread.sleep(200)
+		import org.scala_tools.time.Imports._
+
+		val start = System.currentTimeMillis
+		lock.tryWriteLockAndDo(DateTime.now + 1000.millis) {
+			"ok"
+		} should be(Some("ok"))
+
+		// did it wait?
+		(System.currentTimeMillis - start) should be > 50.toLong
+	}
+
 	test("tryLockAndDo, datetime, fails within time") {
 		val lock = LockManager.reentrantLock
 		// acquire lock on a different thread
@@ -36,6 +83,29 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 		lock.tryLockAndDo(DateTime.now + 100.millis) {
 			"ok"
 		} should be(None)
+
+		// did it wait?
+		(System.currentTimeMillis - start) should be > 50.toLong
+	}
+	test("tryLockAndDo, datetime, aquires lock before timeout") {
+		val lock = LockManager.reentrantLock
+		// acquire lock on a different thread
+		val t = new Thread {
+			override def run {
+				lock.tryLockAndDo {
+					Thread.sleep(500)
+				}
+			}
+		}
+
+		t.start
+		Thread.sleep(200)
+		import org.scala_tools.time.Imports._
+
+		val start = System.currentTimeMillis
+		lock.tryLockAndDo(DateTime.now + 1000.millis) {
+			"ok"
+		} should be(Some("ok"))
 
 		// did it wait?
 		(System.currentTimeMillis - start) should be > 50.toLong

@@ -189,6 +189,9 @@ trait Scheduling {
 	 * This method returns straight away, any processing occurs on separate threads using
 	 * the executor.
 	 *
+	 * If the task or the process throws an exception, the scheduling of the task will stop.
+	 * Please use the safeRunPeriodically methods to avoid this.
+	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
 	 * @param process		a function to process the result and specify the next
 	 * 						time the task should run. The value is calculated after f is
@@ -225,6 +228,9 @@ trait Scheduling {
 	 * executorService.shutdownAndAwaitTermination(DateTime.now + 100.millis)
 	 *
 	 * </code>
+	 *
+	 * If the task or the process throws an exception, the scheduling of the task will stop.
+	 * Please use the safeRunPeriodically methods to avoid this.
 	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
 	 * @param process		a by-value parameter specifying the next time the task should
