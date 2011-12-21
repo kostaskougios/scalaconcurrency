@@ -110,8 +110,8 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 		try {
 			val start = System.currentTimeMillis
 			@volatile var counter = 0
-			val processor = { result: Int =>
-				assert(result == 25 + counter) // on a different thread, matchers don't work here
+			val processor = { result: Option[Int] =>
+				assert(result.get == 25 + counter) // on a different thread, matchers don't work here
 				counter += 1
 				if (counter == 1) Some(aSec) else None
 			}

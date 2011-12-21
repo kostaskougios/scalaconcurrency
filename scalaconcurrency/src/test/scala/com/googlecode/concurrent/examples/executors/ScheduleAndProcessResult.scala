@@ -14,7 +14,7 @@ object ScheduleAndProcessResult extends App {
 	val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
 	val start = System.currentTimeMillis
-	executorService.runPeriodically(DateTime.now + 50.millis, { l: Long =>
+	executorService.runPeriodically(DateTime.now + 50.millis, { l: Option[Long] =>
 		println("processing the result, i.e. storing %d into db ...".format(l))
 		Some(DateTime.now + 1.second)
 	}) {

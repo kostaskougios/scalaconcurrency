@@ -55,9 +55,15 @@ object ExecutorServiceManager {
 				workQueue)
 		)
 
+	def newScheduledThreadPool(corePoolSize: Int, errorLogger: Throwable => Unit) =
+		new Executor with Shutdown with Scheduling {
+			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
+			override val onError = errorLogger
+		}
 	def newScheduledThreadPool(corePoolSize: Int) =
 		new Executor with Shutdown with Scheduling {
 			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
+			override val onError = (t: Throwable) => t.printStackTrace
 		}
 
 	def newFixedThreadPool(nThreads: Int) =
@@ -145,6 +151,7 @@ abstract class Executor {
  */
 trait Scheduling {
 	protected val executorService: ScheduledExecutorService
+	val onError: Throwable => Unit
 
 	/**
 	 * schedules a task to run in the future
@@ -187,8 +194,10 @@ trait Scheduling {
 	 * This method returns straight away, any processing occurs on separate threads using
 	 * the executor.
 	 *
-	 * If the task or the process throws an exception, the scheduling of the task will stop.
-	 * Please use the safeRunPeriodically methods to avoid this.
+	 * If the task throws an exception, the onError function will be called to log
+	 * the error (by default it prints the stacktrace to the console)
+	 *
+	 * If the process throws an exception, the scheduling of the task will stop.
 	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
 	 * @param process		a function to process the result and specify the next
@@ -196,9 +205,13 @@ trait Scheduling {
 	 * 						executed and if None the task will not be executed anymore.
 	 * @param f				the task
 	 */
-	def runPeriodically[R](firstRun: DateTime, process: R => Option[DateTime])(f: => R): Unit =
+	def runPeriodically[R](firstRun: DateTime, process: Option[R] => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
-			val r = f
+			val r = try { Some(f) } catch {
+				case e =>
+					onError(e)
+					None
+			}
 			process(r) match {
 				case Some(nextRun) => runPeriodically(nextRun, process)(f)
 				case None =>
@@ -227,20 +240,24 @@ trait Scheduling {
 	 *
 	 * </code>
 	 *
-	 * If the task or the process throws an exception, the scheduling of the task will stop.
-	 * Please use the safeRunPeriodically methods to avoid this.
+	 * If the task throws an exception, the onError function will be called to log
+	 * the error (by default it prints the stacktrace to the console)
+	 *
+	 * If the process throws an exception, the scheduling of the task will stop.
 	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
-	 * @param process		a by-value parameter specifying the next time the task should
+	 * @param whenToReRun	a by-value parameter specifying the next time the task should
 	 * 						run. The value is calculated after f is executed and if None
 	 * 						the task will not be executed anymore.
 	 * @param f				the task
 	 */
-	def runPeriodically[R](firstRun: DateTime, process: => Option[DateTime])(f: => R): Unit =
+	def runPeriodically[R](firstRun: DateTime, whenToReRun: => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
-			f
-			process match {
-				case Some(nextRun) => runPeriodically(nextRun, process)(f)
+			try { f } catch {
+				case e => onError(e)
+			}
+			whenToReRun match {
+				case Some(nextRun) => runPeriodically(nextRun, whenToReRun)(f)
 				case None =>
 			}
 		}
@@ -251,6 +268,7 @@ trait Scheduling {
  */
 trait Shutdown {
 	protected val executorService: ExecutorService
+
 	def shutdown = executorService.shutdown
 	def shutdownNow = executorService.shutdownNow
 	def awaitTermination(timeout: Long, unit: TimeUnit): Unit = executorService.awaitTermination(timeout, unit)
@@ -321,6 +339,9 @@ class CompletionExecutor[V](protected val executorService: ExecutorService) exte
 		if (t == null) None else Some(t)
 	}
 
+	/**
+	 * polls, waiting max until the provided DateTime.
+	 */
 	def poll(till: DateTime): Option[Future[V]] = pollWaitInMillis(till.millis - System.currentTimeMillis)
 	def pollWaitInMillis(timeoutMs: Long): Option[Future[V]] = poll(timeoutMs, TimeUnit.MILLISECONDS)
 }
