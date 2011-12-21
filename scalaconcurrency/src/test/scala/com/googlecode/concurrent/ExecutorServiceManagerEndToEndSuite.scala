@@ -7,14 +7,14 @@ import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-
+import org.scala_tools.time.Imports._
 /**
  * @author kostantinos.kougios
  *
  * 15 Nov 2011
  */
 @RunWith(classOf[JUnitRunner])
-class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
+class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 	test("lifecycle with params") {
 		val threads = new ConcurrentHashMap[Thread, Thread]
 		val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) { param =>
@@ -88,10 +88,10 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 
 			def processor = {
 				counter += 1
-				if (counter < 3) Some(ExecutorServiceManagerEndToEndSpec.aHundredMs) else None
+				if (counter < 3) Some(aHundredMs) else None
 			}
 
-			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.aHundredMs, processor) {
+			executorService.runPeriodically(aHundredMs, processor) {
 				fcounter += 1
 				25
 			}
@@ -113,9 +113,9 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 			val processor = { result: Int =>
 				assert(result == 25 + counter) // on a different thread, matchers don't work here
 				counter += 1
-				if (counter == 1) Some(ExecutorServiceManagerEndToEndSpec.aSec) else None
+				if (counter == 1) Some(aSec) else None
 			}
-			executorService.runPeriodically(ExecutorServiceManagerEndToEndSpec.halfSec, processor) {
+			executorService.runPeriodically(halfSec, processor) {
 				25 + counter
 			}
 			Thread.sleep(1700)
@@ -145,14 +145,14 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 
 		try {
 			val start = System.currentTimeMillis
-			val future = executorService.schedule(ExecutorServiceManagerEndToEndSpec.aSec /* avoid specs2 implicits */ ) {
+			val future = executorService.schedule(aSec) {
 				25
 			}
 			future.get should be === 25
 			(System.currentTimeMillis - start) should be > (900.toLong)
 
 			val start2 = System.currentTimeMillis
-			val future2 = executorService.schedule(ExecutorServiceManagerEndToEndSpec.halfSec /* avoid specs2 implicits */ ) {
+			val future2 = executorService.schedule(halfSec) {
 				26
 			}
 			future2.get should be === 26
@@ -168,7 +168,7 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 
 		try {
 			evaluating {
-				executorService.schedule(ExecutorServiceManagerEndToEndSpec.pastTime /* avoid specs2 implicits */ ) {
+				executorService.schedule(pastTime) {
 					25
 				}
 			} should produce[IllegalArgumentException]
@@ -219,6 +219,33 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 		}
 	}
 
+	test("cached completion service, timed poll with DateTime positive") {
+		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
+
+		try {
+			executorService.submit {
+				Thread.sleep(500)
+				25
+			}
+			executorService.poll(DateTime.now + 800.millis).get.get should be === 25
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
+
+	test("cached completion service, timed poll with dateTime negative") {
+		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
+
+		try {
+			executorService.submit {
+				Thread.sleep(500)
+				25
+			}
+			executorService.poll(DateTime.now + 200.millis) should be(None)
+		} finally {
+			executorService.shutdownAndAwaitTermination(1)
+		}
+	}
 	test("cached completion service, 2 tasks positive") {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
@@ -233,12 +260,7 @@ class ExecutorServiceManagerEndToEndSpec extends FunSuite with ShouldMatchers {
 			executorService.shutdownAndAwaitTermination(1)
 		}
 	}
-}
 
-object ExecutorServiceManagerEndToEndSpec {
-	import org.scala_tools.time.Imports._
-
-	// avoid spec2 implicit time conversions 
 	def aSec = DateTime.now + 1.second
 	def halfSec = DateTime.now + 500.millis
 	def pastTime = DateTime.now - 1.second

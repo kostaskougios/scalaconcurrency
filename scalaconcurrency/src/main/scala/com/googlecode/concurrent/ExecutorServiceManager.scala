@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.CompletionService
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledFuture
-
+import org.scala_tools.time.Imports._
 /**
  * manages executor instantiation, provides factory methods
  * for various executors
@@ -162,8 +162,6 @@ trait Scheduling {
 	def schedule[R](delay: Long, unit: TimeUnit)(f: => R): ScheduledFuture[R] = executorService.schedule(new Callable[R] {
 		def call = f
 	}, delay, unit)
-
-	import org.scala_tools.time.Imports._
 
 	/**
 	 * schedule a task to run in the future.
@@ -323,5 +321,6 @@ class CompletionExecutor[V](protected val executorService: ExecutorService) exte
 		if (t == null) None else Some(t)
 	}
 
+	def poll(till: DateTime): Option[Future[V]] = pollWaitInMillis(till.millis - System.currentTimeMillis)
 	def pollWaitInMillis(timeoutMs: Long): Option[Future[V]] = poll(timeoutMs, TimeUnit.MILLISECONDS)
 }
