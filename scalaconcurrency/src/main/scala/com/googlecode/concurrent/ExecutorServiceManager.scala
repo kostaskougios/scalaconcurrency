@@ -28,6 +28,10 @@ object ExecutorServiceManager {
 		protected val executorService = executor
 	}
 
+	def newSingleThreadExecutor = new Executor with Shutdown {
+		protected val executorService = Executors.newSingleThreadExecutor
+	}
+
 	def newCachedThreadPool(
 		corePoolSize: Int,
 		maximumPoolSize: Int,
