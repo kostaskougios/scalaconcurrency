@@ -110,7 +110,10 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.10</version>
 				<configuration>
-					<skip>true</skip>
+					<includes>
+						<include>**/*Spec.class</include>
+						<include>**/*Suite.class</include>
+					</includes>
 				</configuration>
 			</plugin>
 			<plugin>
