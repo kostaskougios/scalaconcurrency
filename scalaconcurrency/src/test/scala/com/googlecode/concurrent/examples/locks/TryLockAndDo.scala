@@ -6,6 +6,12 @@ import org.scala_tools.time.Imports._
 import org.scala_tools.time.DurationBuilder
 
 /**
+ * one thread will aquire a read lock and keep it for 1 sec.
+ * The main thread will then try to acquire a write lock and
+ * wait for 100ms and then fail to acquire the lock. It will
+ * then try to acquire the lock waiting for 1100ms and
+ * succeed.
+ *
  * @author kostantinos.kougios
  *
  * 22 Dec 2011
