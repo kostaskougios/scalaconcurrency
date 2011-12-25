@@ -3,7 +3,6 @@ package com.googlecode.concurrent.examples.locks
 import com.googlecode.concurrent.LockManager
 import com.googlecode.concurrent.ExecutorServiceManager
 import org.scala_tools.time.Imports._
-import org.scala_tools.time.DurationBuilder
 
 /**
  * one thread will aquire a read lock and keep it for 1 sec.
