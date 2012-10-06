@@ -7,7 +7,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.googlecode.scalaconcurrency</groupId>
 	<artifactId>scalaconcurrency</artifactId>
-	<version>0.7.1</version>
+	<version>0.8.0-${scala.version}</version>
 	<name>scalaconcurrency</name>
 	<description>
 		Wrapper classes for jdk5, and 7 concurrency package
@@ -30,7 +30,6 @@
 	</issueManagement>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<scala.version>2.9.1</scala.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -45,12 +44,6 @@
 			<version>0.5</version>
 		</dependency>
 		<dependency>
-			<groupId>org.scalatest</groupId>
-			<artifactId>scalatest_2.9.1</artifactId>
-			<version>1.6.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.10</version>
@@ -58,8 +51,6 @@
 		</dependency>
 	</dependencies>
 	<build>
-		<sourceDirectory>src/main/scala</sourceDirectory>
-		<testSourceDirectory>src/test/scala</testSourceDirectory>
 		<plugins>
 			<!-- Ensures we are compiling at 1.7 level -->
 			<plugin>
@@ -73,13 +64,15 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.scala-tools</groupId>
-				<artifactId>maven-scala-plugin</artifactId>
-				<version>2.15.2</version>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
 				<configuration>
 					<scalaVersion>${scala.version}</scalaVersion>
 					<args>
 						<arg>-target:jvm-1.5</arg>
+						<arg>-Xexperimental</arg>
+						<arg>-optimize</arg>
+						<arg>-unchecked</arg>
 					</args>
 					<charset>${project.build.sourceEncoding}</charset>
 					<jvmArgs>
@@ -88,8 +81,17 @@
 				</configuration>
 				<executions>
 					<execution>
+						<id>scala-compile-first</id>
+						<phase>process-resources</phase>
 						<goals>
+							<goal>add-source</goal>
 							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
 							<goal>testCompile</goal>
 						</goals>
 					</execution>
@@ -98,7 +100,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
+				<version>2.2</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -112,7 +114,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.10</version>
+				<version>2.12.4</version>
 				<configuration>
 					<includes>
 						<include>**/*Spec.class</include>
@@ -121,22 +123,8 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.4</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<artifactId>maven-release-plugin</artifactId>
-				<version>2.2.1</version>
+				<version>2.3.2</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-repository-plugin</artifactId>
@@ -144,4 +132,66 @@
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>scala2.9</id>
+			<properties>
+				<scala.version>2.9.2</scala.version>
+			</properties>
+			<activation>
+				<property>
+					<name>!exclude</name>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.scalatest</groupId>
+					<artifactId>scalatest_2.9.2</artifactId>
+					<version>2.0.M4</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>scala2.10</id>
+			<properties>
+				<scala.version>2.10.0-M7</scala.version>
+			</properties>
+			<activation>
+				<property>
+					<name>exclude</name>
+				</property>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.scalatest</groupId>
+					<artifactId>scalatest_2.10.0-M7</artifactId>
+					<version>2.0.M4-2.10.0-M7-B1</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>sonatype-deploy</id>
+			<build>
+				<defaultGoal>deploy</defaultGoal>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.4</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
