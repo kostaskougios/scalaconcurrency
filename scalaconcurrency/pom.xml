@@ -8,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.googlecode.scalaconcurrency</groupId>
     <artifactId>scalaconcurrency</artifactId>
-    <version>0.8.1-${scala.version}</version>
+    <version>0.8.2-${scala.version}</version>
     <name>scalaconcurrency</name>
     <description>
         Wrapper classes for jdk5, and 7 concurrency package
@@ -43,6 +43,12 @@
             <groupId>org.scala-tools.time</groupId>
             <artifactId>time_2.9.1</artifactId>
             <version>0.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -156,7 +162,7 @@
         <profile>
             <id>scala2.10</id>
             <properties>
-                <scala.version>2.10.1</scala.version>
+                <scala.version>2.10.2</scala.version>
             </properties>
             <activation>
                 <property>

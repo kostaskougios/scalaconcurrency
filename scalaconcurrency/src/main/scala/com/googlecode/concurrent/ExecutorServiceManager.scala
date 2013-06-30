@@ -10,25 +10,28 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorCompletionService
-import java.util.concurrent.CompletionService
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledFuture
 import org.scala_tools.time.Imports._
+
 /**
  * manages executor instantiation, provides factory methods
  * for various executors
  *
  * @author kostantinos.kougios
  *
- * 15 Nov 2011
+ *         15 Nov 2011
  */
-object ExecutorServiceManager {
+object ExecutorServiceManager
+{
 
-	def wrap(executor: ExecutorService) = new Executor with Shutdown {
+	def wrap(executor: ExecutorService) = new Executor with Shutdown
+	{
 		protected val executorService = executor
 	}
 
-	def newSingleThreadExecutor = new Executor with Shutdown {
+	def newSingleThreadExecutor = new Executor with Shutdown
+	{
 		protected val executorService = Executors.newSingleThreadExecutor
 	}
 
@@ -37,7 +40,8 @@ object ExecutorServiceManager {
 		maximumPoolSize: Int,
 		keepAliveTimeInSeconds: Int = 60,
 		workQueue: BlockingQueue[Runnable] = new SynchronousQueue) =
-		new Executor with Shutdown {
+		new Executor with Shutdown
+		{
 			override protected val executorService = new ThreadPoolExecutor(
 				corePoolSize,
 				maximumPoolSize,
@@ -45,6 +49,7 @@ object ExecutorServiceManager {
 				TimeUnit.SECONDS,
 				workQueue)
 		}
+
 	def newCachedThreadPoolCompletionService[V](
 		corePoolSize: Int,
 		maximumPoolSize: Int,
@@ -60,18 +65,22 @@ object ExecutorServiceManager {
 		)
 
 	def newScheduledThreadPool(corePoolSize: Int, errorLogger: Throwable => Unit) =
-		new Executor with Shutdown with Scheduling {
+		new Executor with Shutdown with Scheduling
+		{
 			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
 			override val onError = errorLogger
 		}
+
 	def newScheduledThreadPool(corePoolSize: Int) =
-		new Executor with Shutdown with Scheduling {
+		new Executor with Shutdown with Scheduling
+		{
 			override protected val executorService = new ScheduledThreadPoolExecutor(corePoolSize)
 			override val onError = (t: Throwable) => t.printStackTrace
 		}
 
 	def newFixedThreadPool(nThreads: Int) =
-		new Executor with Shutdown {
+		new Executor with Shutdown
+		{
 			override protected val executorService = Executors.newFixedThreadPool(nThreads)
 		}
 
@@ -125,7 +134,8 @@ object ExecutorServiceManager {
  *
  * new Executor with Shutdown
  */
-abstract class Executor {
+abstract class Executor
+{
 	// ideally the underlying executor should not be accessible
 	protected val executorService: ExecutorService
 
@@ -135,25 +145,28 @@ abstract class Executor {
 	 * example:
 	 * <code>
 	 * val future=executor.submit {
-	 * 	// will run on a separate thread soon
+	 * // will run on a separate thread soon
 	 * 25
 	 * }
 	 * ...
 	 * val result = future.get // result=25
 	 * </code>
 	 */
-	def submit[R](f: => R) = executorService.submit(new Callable[R] {
+	def submit[R](f: => R) = executorService.submit(new Callable[R]
+	{
 		def call = f
 	})
 
 	def submit[V](task: Callable[V]) = executorService.submit(task)
+
 	def submit(task: Runnable) = executorService.submit(task)
 }
 
 /*
  * new Executor with Scheduling with Shutdown
  */
-trait Scheduling {
+trait Scheduling
+{
 	protected val executorService: ScheduledExecutorService
 	val onError: Throwable => Unit
 
@@ -164,13 +177,14 @@ trait Scheduling {
 	 *
 	 * <code>
 	 * val future=schedule(100,TimeUnit.MILLISECONDS) {
-	 * 	// to do in 100 millis from now
+	 * // to do in 100 millis from now
 	 * }
 	 * ...
 	 * val result=future.get
 	 * </code>
 	 */
-	def schedule[R](delay: Long, unit: TimeUnit)(f: => R): ScheduledFuture[R] = executorService.schedule(new Callable[R] {
+	def schedule[R](delay: Long, unit: TimeUnit)(f: => R): ScheduledFuture[R] = executorService.schedule(new Callable[R]
+	{
 		def call = f
 	}, delay, unit)
 
@@ -180,7 +194,7 @@ trait Scheduling {
 	 * example:
 	 * <code>
 	 * usage: val future=schedule(DateTime.now + 2.days) {
-	 * 	// to do in 2 days from now
+	 * // to do in 2 days from now
 	 * }
 	 * </code>
 	 */
@@ -205,14 +219,16 @@ trait Scheduling {
 	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
 	 * @param process		a function to process the result and specify the next
-	 * 						time the task should run. The value is calculated after f is
-	 * 						executed and if None the task will not be executed anymore.
+	 *                       time the task should run. The value is calculated after f is
+	 *                       executed and if None the task will not be executed anymore.
 	 * @param f				the task
 	 */
 	def runPeriodically[R](firstRun: DateTime, process: Option[R] => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
-			val r = try { Some(f) } catch {
-				case e =>
+			val r = try {
+				Some(f)
+			} catch {
+				case e: Throwable =>
 					onError(e)
 					None
 			}
@@ -251,14 +267,16 @@ trait Scheduling {
 	 *
 	 * @param firstRun		DateTime of the first run, i.e. DateTime.now + 2.seconds
 	 * @param whenToReRun	a by-value parameter specifying the next time the task should
-	 * 						run. The value is calculated after f is executed and if None
-	 * 						the task will not be executed anymore.
+	 *                       run. The value is calculated after f is executed and if None
+	 *                       the task will not be executed anymore.
 	 * @param f				the task
 	 */
 	def runPeriodically[R](firstRun: DateTime, whenToReRun: => Option[DateTime])(f: => R): Unit =
 		schedule(firstRun) {
-			try { f } catch {
-				case e => onError(e)
+			try {
+				f
+			} catch {
+				case e: Throwable => onError(e)
 			}
 			whenToReRun match {
 				case Some(nextRun) => runPeriodically(nextRun, whenToReRun)(f)
@@ -270,11 +288,14 @@ trait Scheduling {
 /**
  * provides shutdown services to Executor
  */
-trait Shutdown {
+trait Shutdown
+{
 	protected val executorService: ExecutorService
 
 	def shutdown = executorService.shutdown
+
 	def shutdownNow = executorService.shutdownNow
+
 	def awaitTermination(timeout: Long, unit: TimeUnit): Unit = executorService.awaitTermination(timeout, unit)
 
 	import org.scala_tools.time.Imports._
@@ -295,12 +316,17 @@ trait Shutdown {
 /*
  * @see CompletionService
  */
-class CompletionExecutor[V](protected val executorService: ExecutorService) extends Shutdown {
+class CompletionExecutor[V](protected val executorService: ExecutorService) extends Shutdown
+{
 	private val completionService = new ExecutorCompletionService[V](executorService)
-	def submit(f: => V): Future[V] = completionService.submit(new Callable[V] {
+
+	def submit(f: => V): Future[V] = completionService.submit(new Callable[V]
+	{
 		def call = f
 	})
+
 	def submit(task: Callable[V]) = completionService.submit(task)
+
 	def submit(task: Runnable, result: V) = completionService.submit(task, result)
 
 	/**
@@ -330,9 +356,9 @@ class CompletionExecutor[V](protected val executorService: ExecutorService) exte
 	 * time if none are yet present.
 	 *
 	 * @param timeout how long to wait before giving up, in units of
-	 *        <tt>unit</tt>
+	 *                <tt>unit</tt>
 	 * @param unit a <tt>TimeUnit</tt> determining how to interpret the
-	 *        <tt>timeout</tt> parameter
+	 *             <tt>timeout</tt> parameter
 	 * @return the Future representing the next completed task or
 	 *         <tt>None</tt> if the specified waiting time elapses
 	 *         before one is present
@@ -347,5 +373,6 @@ class CompletionExecutor[V](protected val executorService: ExecutorService) exte
 	 * polls, waiting max until the provided DateTime.
 	 */
 	def poll(till: DateTime): Option[Future[V]] = pollWaitInMillis(till.millis - System.currentTimeMillis)
+
 	def pollWaitInMillis(timeoutMs: Long): Option[Future[V]] = poll(timeoutMs, TimeUnit.MILLISECONDS)
 }
