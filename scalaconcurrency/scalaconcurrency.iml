@@ -4,7 +4,7 @@
     <facet type="scala" name="Scala">
       <configuration>
         <option name="compilerLibraryLevel" value="Project" />
-        <option name="compilerLibraryName" value="Maven: org.scala-lang:scala-compiler-bundle:2.10.1" />
+        <option name="compilerLibraryName" value="Maven: org.scala-lang:scala-compiler-bundle:2.10.2" />
         <option name="compilerOptions" value="-target:jvm-1.5 -Xexperimental -optimize" />
         <option name="maximumHeapSize" value="1024" />
         <option name="uncheckedWarnings" value="true" />
@@ -24,7 +24,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.scala-lang:scala-library:2.10.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.scala-lang:scala-library:2.10.2" level="project" />
     <orderEntry type="library" name="Maven: org.scala-tools.time:time_2.9.1:0.5" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:1.6.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.10" level="project" />
