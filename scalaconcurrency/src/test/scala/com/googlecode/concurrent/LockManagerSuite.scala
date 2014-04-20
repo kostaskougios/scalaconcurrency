@@ -1,7 +1,5 @@
 package com.googlecode.concurrent
 
-import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.locks.Lock
 import com.googlecode.concurrent.mock.MockLock
 import java.util.concurrent.TimeUnit
 import com.googlecode.concurrent.mock.MockReadWriteLock
@@ -9,18 +7,21 @@ import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.joda.time.DateTime
 
 /**
  * @author kostantinos.kougios
  *
- * 7 Nov 2011
+ *         7 Nov 2011
  */
 @RunWith(classOf[JUnitRunner])
-class LockManagerSuite extends FunSuite with ShouldMatchers {
+class LockManagerSuite extends FunSuite with ShouldMatchers
+{
 	test("tryReadLockAndDo/tryWriteLockAndDo, datetime, fails within time") {
 		val lock = LockManager.readWriteLock
 		// acquire lock on a different thread
-		val t = new Thread {
+		val t = new Thread
+		{
 			override def run {
 				lock.tryReadLockAndDo {
 					Thread.sleep(1000)
@@ -30,10 +31,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 
 		t.start
 		Thread.sleep(200)
-		import org.scala_tools.time.Imports._
 
 		val start = System.currentTimeMillis
-		lock.tryWriteLockAndDo(DateTime.now + 100.millis) {
+		lock.tryWriteLockAndDo(DateTime.now.plusMillis(100)) {
 			"ok"
 		} should be(None)
 
@@ -43,7 +43,8 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("tryReadLockAndDo/tryWriteLockAndDo, datetime, aquires lock before timeout") {
 		val lock = LockManager.readWriteLock
 		// acquire lock on a different thread
-		val t = new Thread {
+		val t = new Thread
+		{
 			override def run {
 				lock.tryReadLockAndDo {
 					Thread.sleep(500)
@@ -53,10 +54,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 
 		t.start
 		Thread.sleep(200)
-		import org.scala_tools.time.Imports._
 
 		val start = System.currentTimeMillis
-		lock.tryWriteLockAndDo(DateTime.now + 1000.millis) {
+		lock.tryWriteLockAndDo(DateTime.now.plusMillis(1000)) {
 			"ok"
 		} should be(Some("ok"))
 
@@ -67,7 +67,8 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("tryLockAndDo, datetime, fails within time") {
 		val lock = LockManager.reentrantLock
 		// acquire lock on a different thread
-		val t = new Thread {
+		val t = new Thread
+		{
 			override def run {
 				lock.tryLockAndDo {
 					Thread.sleep(1000)
@@ -77,10 +78,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 
 		t.start
 		Thread.sleep(200)
-		import org.scala_tools.time.Imports._
 
 		val start = System.currentTimeMillis
-		lock.tryLockAndDo(DateTime.now + 100.millis) {
+		lock.tryLockAndDo(DateTime.now.plusMillis(100)) {
 			"ok"
 		} should be(None)
 
@@ -90,7 +90,8 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("tryLockAndDo, datetime, aquires lock before timeout") {
 		val lock = LockManager.reentrantLock
 		// acquire lock on a different thread
-		val t = new Thread {
+		val t = new Thread
+		{
 			override def run {
 				lock.tryLockAndDo {
 					Thread.sleep(500)
@@ -100,10 +101,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 
 		t.start
 		Thread.sleep(200)
-		import org.scala_tools.time.Imports._
 
 		val start = System.currentTimeMillis
-		lock.tryLockAndDo(DateTime.now + 1000.millis) {
+		lock.tryLockAndDo(DateTime.now.plusMillis(1000)) {
 			"ok"
 		} should be(Some("ok"))
 
@@ -115,9 +115,7 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 		var c = 0
 		val lock = LockManager.reentrantLock
 
-		import org.scala_tools.time.Imports._
-
-		lock.tryLockAndDo(DateTime.now + 10.millis) {
+		lock.tryLockAndDo(DateTime.now.plusMillis(10)) {
 			c += 1
 			"ok"
 		} should be === Some("ok")
@@ -204,7 +202,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock readLock executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.readLockAndDo { c += 1; "ok" } should be === "ok"
+		lock.readLockAndDo {
+			c += 1; "ok"
+		} should be === "ok"
 		c should be === 1
 	}
 
@@ -219,7 +219,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock writeLock executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.writeLockAndDo { c += 1; "ok" } should be === "ok"
+		lock.writeLockAndDo {
+			c += 1; "ok"
+		} should be === "ok"
 		c should be === 1
 	}
 
@@ -234,7 +236,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock readInterrubtiblyAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.readLockInterruptiblyAndDo { c += 1; "ok" } should be === "ok"
+		lock.readLockInterruptiblyAndDo {
+			c += 1; "ok"
+		} should be === "ok"
 		c should be === 1
 	}
 
@@ -249,7 +253,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock writeInterrubtiblyAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.writeLockInterruptiblyAndDo { c += 1; "ok" } should be === "ok"
+		lock.writeLockInterruptiblyAndDo {
+			c += 1; "ok"
+		} should be === "ok"
 		c should be === 1
 	}
 
@@ -264,7 +270,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock tryReadLockAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.tryReadLockAndDo { c += 1; "ok" } should be === Some("ok")
+		lock.tryReadLockAndDo {
+			c += 1; "ok"
+		} should be === Some("ok")
 		c should be === 1
 	}
 
@@ -279,7 +287,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock tryWriteLockAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.tryWriteLockAndDo { c += 1; "ok" } should be === Some("ok")
+		lock.tryWriteLockAndDo {
+			c += 1; "ok"
+		} should be === Some("ok")
 		c should be === 1
 	}
 
@@ -294,7 +304,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock timed tryReadLockAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.tryReadLockAndDo(10, TimeUnit.MINUTES) { c += 1; "ok" } should be === Some("ok")
+		lock.tryReadLockAndDo(10, TimeUnit.MINUTES) {
+			c += 1; "ok"
+		} should be === Some("ok")
 		c should be === 1
 	}
 
@@ -309,7 +321,9 @@ class LockManagerSuite extends FunSuite with ShouldMatchers {
 	test("readWriteLock timed tryWriteLockAndDo executes function") {
 		val lock = LockManager.readWriteLock
 		var c = 0
-		lock.tryWriteLockAndDo(10, TimeUnit.MINUTES) { c += 1; "ok" } should be === Some("ok")
+		lock.tryWriteLockAndDo(10, TimeUnit.MINUTES) {
+			c += 1; "ok"
+		} should be === Some("ok")
 		c should be === 1
 	}
 

@@ -1,5 +1,5 @@
 package com.googlecode.concurrent
-import org.junit.runner.RunWith
+
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ConcurrentHashMap
@@ -7,20 +7,23 @@ import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import org.scala_tools.time.Imports._
+import org.joda.time.DateTime
+
 /**
  * @author kostantinos.kougios
  *
- * 15 Nov 2011
+ *         15 Nov 2011
  */
 @RunWith(classOf[JUnitRunner])
-class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
+class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers
+{
 	test("lifecycle with params") {
 		val threads = new ConcurrentHashMap[Thread, Thread]
-		val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) { param =>
-			val ct = Thread.currentThread
-			threads.put(ct, ct)
-			100 + param
+		val results = ExecutorServiceManager.lifecycle(5, List(5, 10, 15, 20, 25, 30, 35, 40)) {
+			param =>
+				val ct = Thread.currentThread
+				threads.put(ct, ct)
+				100 + param
 		}
 		results.toList should be === List(105, 110, 115, 120, 125, 130, 135, 140)
 		threads.size should be === 5
@@ -28,10 +31,11 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 
 	test("lifecycle") {
 		val threads = new ConcurrentHashMap[Thread, Thread]
-		val results = ExecutorServiceManager.lifecycle(5, 20) { i =>
-			val ct = Thread.currentThread
-			threads.put(ct, ct)
-			100 + i
+		val results = ExecutorServiceManager.lifecycle(5, 20) {
+			i =>
+				val ct = Thread.currentThread
+				threads.put(ct, ct)
+				100 + i
 		}
 		results.toSet should be === (101 to 120).toSet
 		threads.size should be === 5
@@ -110,10 +114,11 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 		try {
 			val start = System.currentTimeMillis
 			@volatile var counter = 0
-			val processor = { result: Option[Int] =>
-				assert(result.get == 25 + counter) // on a different thread, matchers don't work here
-				counter += 1
-				if (counter == 1) Some(aSec) else None
+			val processor = {
+				result: Option[Int] =>
+					assert(result.get == 25 + counter) // on a different thread, matchers don't work here
+					counter += 1
+					if (counter == 1) Some(aSec) else None
 			}
 			executorService.runPeriodically(halfSec, processor) {
 				25 + counter
@@ -227,7 +232,7 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 				Thread.sleep(500)
 				25
 			}
-			executorService.poll(DateTime.now + 800.millis).get.get should be === 25
+			executorService.poll(DateTime.now.plusMillis(800)).get.get should be === 25
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
@@ -241,7 +246,7 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 				Thread.sleep(500)
 				25
 			}
-			executorService.poll(DateTime.now + 200.millis) should be(None)
+			executorService.poll(DateTime.now.plusMillis(200)) should be(None)
 		} finally {
 			executorService.shutdownAndAwaitTermination(1)
 		}
@@ -250,8 +255,12 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 		val executorService = ExecutorServiceManager.newCachedThreadPoolCompletionService[Int](5, 10)
 
 		try {
-			executorService.submit { 25 }
-			executorService.submit { Thread.sleep(100); 26 }
+			executorService.submit {
+				25
+			}
+			executorService.submit {
+				Thread.sleep(100); 26
+			}
 
 			executorService.take.get should be === 25
 			executorService.take.get should be === 26
@@ -261,8 +270,11 @@ class ExecutorServiceManagerEndToEndSuite extends FunSuite with ShouldMatchers {
 		}
 	}
 
-	def aSec = DateTime.now + 1.second
-	def halfSec = DateTime.now + 500.millis
-	def pastTime = DateTime.now - 1.second
-	def aHundredMs = DateTime.now + 100.millis
+	def aSec = DateTime.now.plusSeconds(1)
+
+	def halfSec = DateTime.now.plusMillis(500)
+
+	def pastTime = DateTime.now.minusSeconds(1)
+
+	def aHundredMs = DateTime.now.plusMillis(100)
 }

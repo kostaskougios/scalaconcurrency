@@ -1,17 +1,17 @@
 package com.googlecode.concurrent.examples.executors
 
 import com.googlecode.concurrent.ExecutorServiceManager
-
-import org.scala_tools.time.Imports._
+import org.joda.time.DateTime
 
 /**
  * runs a closure periodically, once per second.
  *
  * @author kostantinos.kougios
  *
- * 12 Dec 2011
+ *         12 Dec 2011
  */
-object Schedule extends App {
+object Schedule extends App
+{
 
 	val executorService = ExecutorServiceManager.newScheduledThreadPool(5)
 
@@ -19,7 +19,7 @@ object Schedule extends App {
 	// please note that the 2nd parameter is by-value. This means that it is re-calculated
 	// every time the closure completes it's execution. So it always points to 1 second
 	// in the future. In fact it is 1 second AFTER the task finishes it's execution.
-	executorService.runPeriodically(DateTime.now + 50.millis, Some(DateTime.now + 1.second)) {
+	executorService.runPeriodically(DateTime.now.plusMillis(50), Some(DateTime.now.plusSeconds(1))) {
 		// should print dt 6 times, once per second
 		println("dt:%d".format(System.currentTimeMillis - start))
 	}
@@ -29,5 +29,5 @@ object Schedule extends App {
 	// but running tasks will complete. The executor will wait 100 milliseconds
 	// from now for currently running tasks to finish. If not, those tasks will
 	// keep on running but the executor will be shut.
-	executorService.shutdownAndAwaitTermination(DateTime.now + 100.millis)
+	executorService.shutdownAndAwaitTermination(DateTime.now.plusMillis(100))
 }

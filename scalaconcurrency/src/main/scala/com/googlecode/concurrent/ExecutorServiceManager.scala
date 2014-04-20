@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorCompletionService
 import java.util.concurrent.Future
 import java.util.concurrent.ScheduledFuture
-import org.scala_tools.time.Imports._
+import org.joda.time.DateTime
 
 /**
  * manages executor instantiation, provides factory methods
@@ -39,7 +39,8 @@ object ExecutorServiceManager
 		corePoolSize: Int,
 		maximumPoolSize: Int,
 		keepAliveTimeInSeconds: Int = 60,
-		workQueue: BlockingQueue[Runnable] = new SynchronousQueue) =
+		workQueue: BlockingQueue[Runnable] = new SynchronousQueue
+		) =
 		new Executor with Shutdown
 		{
 			override protected val executorService = new ThreadPoolExecutor(
@@ -54,7 +55,8 @@ object ExecutorServiceManager
 		corePoolSize: Int,
 		maximumPoolSize: Int,
 		keepAliveTimeInSeconds: Int = 60,
-		workQueue: BlockingQueue[Runnable] = new SynchronousQueue) =
+		workQueue: BlockingQueue[Runnable] = new SynchronousQueue
+		) =
 		new CompletionExecutor[V](
 			new ThreadPoolExecutor(
 				corePoolSize,
@@ -199,7 +201,7 @@ trait Scheduling
 	 * </code>
 	 */
 	def schedule[R](runAt: DateTime): (=> R) => ScheduledFuture[R] = {
-		val dt = runAt.millis - System.currentTimeMillis
+		val dt = runAt.getMillis - System.currentTimeMillis
 		if (dt < 0) throw new IllegalArgumentException("next run time is in the past : %s".format(runAt))
 		schedule(dt, TimeUnit.MILLISECONDS) _
 	}
@@ -298,9 +300,7 @@ trait Shutdown
 
 	def awaitTermination(timeout: Long, unit: TimeUnit): Unit = executorService.awaitTermination(timeout, unit)
 
-	import org.scala_tools.time.Imports._
-
-	def awaitTermination(timeoutWhen: DateTime): Unit = awaitTermination(timeoutWhen.millis - System.currentTimeMillis, TimeUnit.MILLISECONDS)
+	def awaitTermination(timeoutWhen: DateTime): Unit = awaitTermination(timeoutWhen.getMillis - System.currentTimeMillis, TimeUnit.MILLISECONDS)
 
 	def shutdownAndAwaitTermination(waitTimeInSeconds: Int) {
 		shutdown
@@ -372,7 +372,7 @@ class CompletionExecutor[V](protected val executorService: ExecutorService) exte
 	/**
 	 * polls, waiting max until the provided DateTime.
 	 */
-	def poll(till: DateTime): Option[Future[V]] = pollWaitInMillis(till.millis - System.currentTimeMillis)
+	def poll(till: DateTime): Option[Future[V]] = pollWaitInMillis(till.getMillis - System.currentTimeMillis)
 
 	def pollWaitInMillis(timeoutMs: Long): Option[Future[V]] = poll(timeoutMs, TimeUnit.MILLISECONDS)
 }

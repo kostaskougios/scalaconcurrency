@@ -2,7 +2,7 @@ package com.googlecode.concurrent.examples.locks
 
 import com.googlecode.concurrent.LockManager
 import com.googlecode.concurrent.ExecutorServiceManager
-import org.scala_tools.time.Imports._
+import org.joda.time.DateTime
 
 /**
  * one thread will aquire a read lock and keep it for 1 sec.
@@ -13,9 +13,10 @@ import org.scala_tools.time.Imports._
  *
  * @author kostantinos.kougios
  *
- * 22 Dec 2011
+ *         22 Dec 2011
  */
-object TryLockAndDo extends App {
+object TryLockAndDo extends App
+{
 
 	val lock = LockManager.readWriteLock
 
@@ -33,12 +34,12 @@ object TryLockAndDo extends App {
 		println("(A) shouldn't execute this line because a read lock is already aquired")
 	}
 
-	lock.tryWriteLockAndDo(DateTime.now + 100.millis) {
+	lock.tryWriteLockAndDo(DateTime.now.plusMillis(100)) {
 		println("(B) shouldn't execute this line because a read lock is already aquired")
 	}
 
 	val startTime = System.currentTimeMillis
-	val result = lock.tryWriteLockAndDo(DateTime.now + 1100.millis) {
+	val result = lock.tryWriteLockAndDo(DateTime.now.plusMillis(1100)) {
 		val dt = System.currentTimeMillis - startTime
 		println("(C) aquired the lock after waiting for %d ms".format(dt))
 		25
